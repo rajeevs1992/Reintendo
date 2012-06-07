@@ -1,6 +1,18 @@
 body
 {
- font-family:'ubuntu';
- color:'orange';
- background-color:#CC90CD;
-};
+	font-family:'ubuntu';
+	background-image:url('/stylesheets/gr1.jpg');
+}
+
+div.centerOfPage
+{
+	top:50%;
+	left:35%;
+	position:absolute;
+	font-size:25;
+}
+
+h1.subPage
+{
+	text-align:center;
+}
