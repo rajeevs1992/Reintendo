@@ -1,0 +1,5 @@
+indexes :
+    - kind : users
+properties :
+    - name : uname
+    - name : passwd

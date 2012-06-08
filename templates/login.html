@@ -1,0 +1,22 @@
+<html>
+	<head>
+		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+	</head>
+		<title>Login to continue</title>
+		<h1  class=subPage>Login with the {{field1}} and Password</h1>
+	<body>
+		<div class=centerOfPage>
+			<form action={{destn}} method=post>
+				{{field1}}:
+				<input class=login type=text name={{name}}><br>
+				Password:
+				<input class=login type=password name=passwd>
+				<div class=error>
+				{{error}}<br>
+				</div>
+				<input type=submit value=Login>
+			</form>
+		</div>
+	</body>
+</html>
+

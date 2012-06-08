@@ -12,6 +12,16 @@ div.centerOfPage
 	font-size:25;
 }
 
+div.error
+{
+	color:red;
+	font-size:15;
+}
+input.login
+{
+	left:100%;
+	position:absolute;
+}
 h1.subPage
 {
 	text-align:center;
