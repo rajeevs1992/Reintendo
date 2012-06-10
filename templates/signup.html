@@ -1,0 +1,26 @@
+<html>
+	<title>Signup</title>
+	<head>
+		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
+	</head>
+	<h1 class=subPage>Signup a new user</h1>
+	<a href=/logout><input type=submit value=Logout class=logoutButton></a>
+	<body>
+	<div class=centerOfPage>
+		<form  action=/admin/writeUser method=post>
+			<label>Username</label>
+			<input type=text name=uname><br>
+			<label>Email</label>
+			<input type=text name=email><br>
+			<label>Password</label>
+			<input type=text name=passwd><br>
+			<div class=error>
+			{{error}}<br>
+			</div>
+			<input type=submit value='Write User'>
+		</form>
+	</div>
+	</body>
+</html>
+
+

@@ -6,8 +6,8 @@ api_version: 1
 handlers:
   - url: /stylesheets
     static_dir: stylesheets
-  - url: /mail
-    script: mail.py
+  - url: /admin/.*
+    script: reintendo.py
     login: admin
   - url: .*
     script: reintendo.py
