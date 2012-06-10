@@ -2,7 +2,24 @@
 	<head>
 		<link type="text/css" rel="stylesheet" href="/stylesheets/main.css" />
 	</head>
+	<h1 class=subPage>Register For a Retest</h1>
+	<title>Register</title>
 	<body>
-		<form action=/register method=post>
-			<input type=text
+		<form action=/writeToDb method=post>
+			<label>Retest Number</label>
+			<input class=leftText type=text name=number><br><br>
+			<label>Password</label>
+			<input class=leftText type=password name=passwd><br><br>
+			<label>Student Name</label>
+			<input class=leftText type=text name=name><br><br>
+			<label>Roll Number</label>
+			<input class=leftText type=text name=rno><br><br>
+			<div class=error>
+			{{error}}<br>
+			</div>
+			<input type=submit value=Register>
+		</form>
+	</body>
+</html>
+
 		

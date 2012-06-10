@@ -34,6 +34,12 @@ class retest(db.Model):
 	passwd=db.StringProperty(required=True,indexed=True)
 	Temail=db.EmailProperty(required=True)
 
+class student(db.Model):
+	number=db.StringProperty(required=True,indexed=True)
+	name=db.StringProperty(required=True)
+	rno=db.StringProperty(required=True,indexed=True)
+
+
 class homepage(webapp.RequestHandler):
 	def get(self):
 		args=''
@@ -52,11 +58,7 @@ class login(webapp.RequestHandler):
 		self.response.headers['Content-Type']='text/html'
 		self.response.headers.add_header("Set-Cookie",'sessid=''')
 		e=self.request.get("e")
-		u=self.request.get("u")
-		if u=='t':
-			args={'field1':'Username','destn':'/setCookieT','name':'uname'}
-		elif u=='s':
-			args={'field1':'Retest number','destn':'/register','name':'retest'}
+		args={'field1':'Username','destn':'/setCookieT','name':'uname'}
 		if e=='1':
 			args['error']="Invalid password"
 		self.response.out.write(template.render(TemplatePath+'login.html',args))
@@ -70,13 +72,16 @@ class setCookieT(webapp.RequestHandler):
 		reply=db.GqlQuery(query).get()
 		if reply is not None:
 			saltedHash=hashlib.sha1(uname+salt).hexdigest()
+			saltedEmail=hashlib.sha1(reply.email+salt).hexdigest()
 			args={'uname':uname}
 			cookie=uname+'|'+saltedHash
+			email=reply.email+'|'+saltedEmail
 			self.response.headers['Content-Type']='text/html'
 			self.response.headers.add_header("Set-Cookie",'sessid='+cookie)
+			self.response.headers.add_header("Set-Cookie",'email='+email)
 			self.redirect("/announce")
 		else:
-			self.redirect("/login?u=t&e=1")
+			self.redirect("/login?e=1")
 
 class announce(webapp.RequestHandler):
 	def get(self):
@@ -121,18 +126,26 @@ class logout(webapp.RequestHandler):
 
 class createTest(webapp.RequestHandler):
 	def post(self):
-		sub=self.request.get('subject')
-		datestr=self.request.get('date')
-		date=datestr.split('-')
-		date=datetime.date(int(date[0]),int(date[1]),int(date[2]))
-		time=self.request.get('time')
-		batch=self.request.get('batch')
-		number=str(random.randint(10000,99999))
-		passwd=hashlib.sha1(str(random.randint(1000,9999))).hexdigest()[0:10]
-		to=self.mail(sub,datestr,time,batch,number,passwd)
-		test=retest(subject=sub,date=date,batch=batch,number=number,passwd=passwd)
-		test.put()
-		self.redirect("/?s=test&email=%s"%(to))
+		cookie=self.request.cookies['sessid']
+		email=self.request.cookies['email']
+		if len(cookie)>0:
+			cookie=cookie.split('|')
+			email=email.split('|')
+			if hashlib.sha1(cookie[0]+salt).hexdigest() == cookie[1] and hashlib.sha1(email[0]+salt).hexdigest() == email[1]:
+				sub=self.request.get('subject')
+				datestr=self.request.get('date')
+				date=datestr.split('-')
+				date=datetime.date(int(date[0]),int(date[1]),int(date[2]))
+				time=self.request.get('time')
+				batch=self.request.get('batch')
+				number=str(random.randint(10000,99999))
+				passwd=hashlib.sha1(str(random.randint(1000,9999))).hexdigest()[0:10]
+				to=self.mail(sub,datestr,time,batch,number,passwd)
+				test=retest(subject=sub,date=date,batch=batch,number=number,passwd=passwd,Temail=email[0])
+				test.put()
+				self.redirect("/?s=test&email=%s"%(to))
+			else:
+				self.redirect("/?s=unauth")
 	def mail(self,sub,datestr,time,batch,number,passwd):
 		query="SELECT * FROM users WHERE uname='%s' AND passwd ='%s'"%(batch,'none')
 		reply=db.GqlQuery(query).get()
@@ -150,10 +163,34 @@ A retest for the subject %s is scheduled on %s at %s.Please register with the be
 						subject=sub+' Retest on '+datestr,
 						body=announce_body)
 		return to
-	
+
+class register(webapp.RequestHandler):
+	def get(self):
+		self.response.out.write(template.render(TemplatePath+'register.html',''))
+
+class writeToDb(webapp.RequestHandler):
+	def post(self):
+		number=self.request.get("number")
+		passwd=self.request.get("passwd")
+		name=self.request.get("name")
+		rno=self.request.get("rno")
+		query="SELECT * FROM retest WHERE number='%s' AND passwd ='%s'"%(number,passwd)
+		reply=db.GqlQuery(query).get()
+		if reply is not None:
+			reply=db.GqlQuery("SELECT * FROM student WHERE rno='%s' AND number='%s'"%(rno,number)).get()
+			if reply is None:
+				s=student(number=number,name=name,rno=rno)
+				s.put()
+				self.redirect("/")	
+			else:
+				self.response.out.write(template.render(TemplatePath+'register.html',{'error':'Already Registerd'}))
+		else:
+			self.response.out.write(template.render(TemplatePath+'register.html',{'error':'Test doesnt exist!'}))
+		
+
 application=webapp.WSGIApplication(\
 [('/',homepage),('/login',login),\
 ('/announce',announce),('/admin/signup',signup),\
 ('/logout',logout),('/setCookieT',setCookieT),('/admin/writeUser',writeUser),\
-('/createTest',createTest)],debug=True)
+('/createTest',createTest),('/register',register),('/writeToDb',writeToDb)],debug=True)
 run_wsgi_app(application)

@@ -29,6 +29,11 @@ input.logoutButton
 	top:30px;
 	position:absolute;
 }
+input.leftText
+{
+	left:200px;
+	position:absolute;
+}
 h1.subPage
 {
 	text-align:center;
