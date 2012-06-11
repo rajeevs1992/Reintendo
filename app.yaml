@@ -9,5 +9,8 @@ handlers:
   - url: /admin/.*
     script: reintendo.py
     login: admin
+  - url: /closeReg
+    script: reintendo.py
+    login: admin
   - url: .*
     script: reintendo.py

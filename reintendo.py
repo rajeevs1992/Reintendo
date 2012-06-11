@@ -8,7 +8,6 @@ import os
 import random
 import datetime
 
-from google.appengine.api import users
 from google.appengine.api import mail
 from google.appengine.ext import db
 from google.appengine.ext import webapp
@@ -28,7 +27,7 @@ class users(db.Model):
 
 class retest(db.Model):	
 	subject=db.StringProperty(required=True)
-	date=db.DateProperty(required=True,indexed=True)
+	date=db.StringProperty(required=True,indexed=True)
 	batch=db.StringProperty(required=True)
 	number=db.StringProperty(required=True,indexed=True)
 	passwd=db.StringProperty(required=True,indexed=True)
@@ -135,13 +134,14 @@ class createTest(webapp.RequestHandler):
 				sub=self.request.get('subject')
 				datestr=self.request.get('date')
 				date=datestr.split('-')
-				date=datetime.date(int(date[0]),int(date[1]),int(date[2]))
+				date=datetime.date(int(date[0]),int(date[1]),int(date[2])).toordinal()
 				time=self.request.get('time')
 				batch=self.request.get('batch')
 				number=str(random.randint(10000,99999))
 				passwd=hashlib.sha1(str(random.randint(1000,9999))).hexdigest()[0:10]
-				to=self.mail(sub,datestr,time,batch,number,passwd)
-				test=retest(subject=sub,date=date,batch=batch,number=number,passwd=passwd,Temail=email[0])
+				to=''
+				#to=self.mail(sub,datestr,time,batch,number,passwd)
+				test=retest(subject=sub,date=str(date),batch=batch,number=number,passwd=passwd,Temail=email[0])
 				test.put()
 				self.redirect("/?s=test&email=%s"%(to))
 			else:
@@ -158,10 +158,10 @@ A retest for the subject %s is scheduled on %s at %s.Please register with the be
 
 				   Register at:
 				   reintendo.appspot.com/login?u=s'''%(sub,datestr,time,number,passwd)
-		mail.send_mail(sender='Retest Announcement <rajeevs1992@gmail.com>',
-						to=to,
-						subject=sub+' Retest on '+datestr,
-						body=announce_body)
+		#mail.send_mail(sender='Retest Announcement <rajeevs1992@gmail.com>',
+		#				to=to,
+		#				subject=sub+' Retest on '+datestr,
+		#				body=announce_body)
 		return to
 
 class register(webapp.RequestHandler):
@@ -187,10 +187,36 @@ class writeToDb(webapp.RequestHandler):
 		else:
 			self.response.out.write(template.render(TemplatePath+'register.html',{'error':'Test doesnt exist!'}))
 		
+class closeReg(webapp.RequestHandler):
+	def get(self):
+		tmrw=str((datetime.date.today()+datetime.timedelta(days=1)).toordinal())
+		reply=db.GqlQuery("SELECT * FROM retest WHERE date='%s'"%(tmrw))
+		regs='\n'
+		mailBody='''
+		The students registered for the %s retest are:
+		%s
+		The registration has been closed at 1900 hrs,%s.
+		'''
+		out=reply.get()
+		if out is not None:
+			for retest in reply:
+				self.response.out.write('hi')
+				s=db.GqlQuery("SELECT * FROM student WHERE number='%s'"%(retest.number))
+				to=retest.Temail
+				if s is not None:
+					for student in s:
+						regs=regs+'%s\t%s\n'%(student.name,student.rno)
+					mail.send_mail(sender='Retest Registrations <gecgitrepository@gmail.com>',
+									to=to,
+									subject='List of students registered for the retest',
+									body=mailBody%(retest.subject,regs,str(datetime.date.today()))
+									)
+				retest.delete()
 
 application=webapp.WSGIApplication(\
 [('/',homepage),('/login',login),\
 ('/announce',announce),('/admin/signup',signup),\
 ('/logout',logout),('/setCookieT',setCookieT),('/admin/writeUser',writeUser),\
-('/createTest',createTest),('/register',register),('/writeToDb',writeToDb)],debug=True)
+('/createTest',createTest),('/register',register),('/writeToDb',writeToDb),\
+('/closeReg',closeReg)],debug=True)
 run_wsgi_app(application)

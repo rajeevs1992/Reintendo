@@ -1,0 +1,6 @@
+cron:
+  - description: close registration and inform teacher
+    url: /closeReg
+    schedule: every day 17:00
+    timezone: Asia/Colombo
+
